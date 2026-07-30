@@ -1,6 +1,6 @@
 # Moodle Utils
 
-A local Chrome Manifest V3 extension that combines three UNSW Moodle utilities:
+A local Chrome Manifest V3 extension that combines four UNSW Moodle utilities:
 
 1. **Keep Moodle signed in** — sends Moodle's lightweight
    `core_session_touch` heartbeat every four minutes using the proven standalone
@@ -10,10 +10,13 @@ A local Chrome Manifest V3 extension that combines three UNSW Moodle utilities:
 3. **Restore expired sessions** — verifies the session with an authenticated
    `/my/` request every four minutes, starts one coordinated UNSW sign-in flow
    when needed, and returns affected tabs to their exact intended URLs.
+4. **Changed since last visit** — remembers each course page, highlights new
+   and updated activities or sections, and lists removed items until you
+   explicitly mark the changes as seen.
 
 The Guardian verification runs shortly after the Session Keeper heartbeat so the
 two requests are staggered. Each feature can be enabled or disabled independently
-from the extension popup. All three are enabled by default.
+from the extension popup. All four are enabled by default.
 
 ## Update the currently installed extension
 
@@ -35,6 +38,18 @@ Successful `core_session_touch` heartbeats display a green notification at the
 bottom-left of Moodle. Guardian `/my/` verifications display a blue notification
 just above it. Failures display red or amber messages.
 
+## Changed since last visit
+
+The first visit to a course page establishes a baseline without marking
+everything as new. On later visits:
+
+- New activities and sections are highlighted in green.
+- Renamed or otherwise updated items are highlighted in orange.
+- Removed items appear in the change-review panel.
+- Highlights remain until **Mark all seen** is pressed.
+
+Snapshots stay in Chrome's local extension storage and never leave the browser.
+
 ## Security and limits
 
 - The extension runs only on `https://moodle.telt.unsw.edu.au/*`.
@@ -47,10 +62,12 @@ just above it. Failures display red or amber messages.
 
 ## Development checks
 
-Run the local recovery test with the bundled Node runtime:
+Run the local test suite with the bundled Node runtime:
 
 ```powershell
 node tests\background.test.cjs
+node tests\feature-scripts.test.cjs
+node tests\change-detector-core.test.cjs
 ```
 
 ## Logo

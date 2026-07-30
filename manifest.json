@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Moodle Utils",
-  "version": "2.0.0",
-  "description": "Keeps UNSW Moodle alive, restores expired sessions, and closes redundant Mobius launch tabs.",
+  "version": "2.1.0",
+  "description": "Keeps UNSW Moodle alive, restores expired sessions, closes redundant Mobius tabs, and highlights course changes.",
   "permissions": [
     "alarms",
     "scripting",
@@ -36,6 +36,8 @@
         "https://moodle.telt.unsw.edu.au/*"
       ],
       "js": [
+        "change-detector-core.js",
+        "changed-since-last-visit.js",
         "content.js"
       ],
       "run_at": "document_idle"

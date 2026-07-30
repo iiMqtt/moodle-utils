@@ -16,7 +16,8 @@ const MAX_STATE_AGE_MS = 10 * 60 * 1000;
 const DEFAULT_SETTINGS = Object.freeze({
   keepalive: true,
   ltiAutoClose: true,
-  sessionRecovery: true
+  sessionRecovery: true,
+  changedSinceLastVisit: true
 });
 
 let authLaunchLock = false;
@@ -683,6 +684,11 @@ async function injectIntoExistingMoodleTabs() {
       .filter((tab) => Number.isInteger(tab.id))
       .flatMap((tab) => {
         const injections = [
+          chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            files: ["change-detector-core.js", "changed-since-last-visit.js"],
+            world: "ISOLATED"
+          }),
           chrome.scripting.executeScript({
             target: { tabId: tab.id },
             files: ["content.js"],

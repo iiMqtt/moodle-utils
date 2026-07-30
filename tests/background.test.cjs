@@ -43,7 +43,7 @@ function createHarness() {
     },
     runtime: {
       getManifest() {
-        return { version: "2.0.0" };
+        return { version: "2.1.0" };
       },
       onInstalled: eventStub(),
       onMessage: eventStub(),
@@ -137,6 +137,9 @@ function createHarness() {
 async function run() {
   const harness = createHarness();
   const { context, storage, createdTabs, updatedTabs, removedTabs } = harness;
+
+  const defaultSettings = await context.getSettings();
+  assert.equal(defaultSettings.changedSinceLastVisit, true);
 
   assert.equal(
     context.normaliseDestination(

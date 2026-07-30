@@ -3,7 +3,8 @@
 const DEFAULT_SETTINGS = {
   keepalive: true,
   ltiAutoClose: true,
-  sessionRecovery: true
+  sessionRecovery: true,
+  changedSinceLastVisit: true
 };
 
 const statusBox = document.querySelector(".status");
@@ -28,7 +29,7 @@ function renderStatus() {
     statusBox.dataset.phase = "disabled";
     statusTitle.textContent = "Session recovery disabled";
     statusDetail.textContent =
-      "Keepalive and Mobius utilities can continue independently.";
+      "The other enabled Moodle utilities will continue independently.";
     primaryAction.textContent = "Check Moodle now";
     primaryAction.disabled = true;
     return;

@@ -12,7 +12,8 @@
   const DEFAULT_SETTINGS = {
     keepalive: true,
     ltiAutoClose: true,
-    sessionRecovery: true
+    sessionRecovery: true,
+    changedSinceLastVisit: true
   };
 
   let settings = { ...DEFAULT_SETTINGS };
