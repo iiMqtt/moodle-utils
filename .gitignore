@@ -1,0 +1,11 @@
+# Browser extension packaging
+*.crx
+*.pem
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+
+# Local test artifacts
+coverage/
+test-results/

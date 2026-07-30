@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Moodle Utils</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <header class="brand">
+        <img src="icons/icon-48.png" alt="" width="44" height="44">
+        <div>
+          <h1>Moodle Utils</h1>
+          <p>Utilities for UNSW Moodle</p>
+        </div>
+      </header>
+
+      <section class="features" aria-label="Features">
+        <label class="feature">
+          <span class="feature-copy">
+            <strong>Keep Moodle signed in</strong>
+            <small>Send the proven session heartbeat every four minutes.</small>
+          </span>
+          <input id="keepalive" type="checkbox">
+          <span class="switch" aria-hidden="true"></span>
+        </label>
+
+        <label class="feature">
+          <span class="feature-copy">
+            <strong>Close Mobius launch tabs</strong>
+            <small>Close Moodle’s redundant LTI intermediate tab.</small>
+          </span>
+          <input id="ltiAutoClose" type="checkbox">
+          <span class="switch" aria-hidden="true"></span>
+        </label>
+
+        <label class="feature">
+          <span class="feature-copy">
+            <strong>Restore expired sessions</strong>
+            <small>Verify the session and return tabs to their intended pages.</small>
+          </span>
+          <input id="sessionRecovery" type="checkbox">
+          <span class="switch" aria-hidden="true"></span>
+        </label>
+      </section>
+
+      <section class="status" aria-live="polite">
+        <span class="status-dot"></span>
+        <div>
+          <strong id="status-title">Ready</strong>
+          <p id="status-detail">All enabled utilities are running.</p>
+        </div>
+      </section>
+
+      <button id="primary-action" type="button">Check Moodle now</button>
+      <p class="footnote">
+        Passwords and authentication codes remain with UNSW and Microsoft.
+        <span id="save-state" aria-live="polite"></span>
+      </p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
