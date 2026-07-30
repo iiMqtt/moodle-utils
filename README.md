@@ -65,8 +65,9 @@ The conservative defaults:
 - Focus an existing tab instead of keeping a newly opened exact duplicate.
 - Preserve manually created groups and their colours.
 - Restrict course actions to the current window.
-- Refuse to close pinned tabs, edited pages, or pages containing editable
-  controls.
+- Automatic duplicate removal refuses pages containing editable controls.
+- Manual **Close course tabs** still closes untouched forms, but preserves
+  pinned tabs and pages you actually edited.
 
 **Organise open tabs** groups currently ungrouped Moodle pages and safely removes
 exact duplicates. **Close course tabs** first records their sanitised URLs as a

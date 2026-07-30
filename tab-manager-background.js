@@ -241,7 +241,7 @@
       return groupId;
     }
 
-    async function safeToClose(tab) {
+    async function safeToClose(tab, { userInitiated = false } = {}) {
       if (!Number.isInteger(tab?.id) || tab.pinned) {
         return false;
       }
@@ -249,7 +249,9 @@
         const result = await chromeApi.tabs.sendMessage(tab.id, {
           type: "CHECK_TAB_SAFE_TO_CLOSE"
         });
-        return result?.safe === true;
+        return userInitiated
+          ? result?.safeUserInitiated === true
+          : result?.safe === true;
       } catch {
         return false;
       }
@@ -529,14 +531,14 @@
       );
       const safeTabs = [];
       for (const candidate of tabs) {
-        if (await safeToClose(candidate)) {
+        if (await safeToClose(candidate, { userInitiated: true })) {
           safeTabs.push(candidate);
         }
       }
       if (!safeTabs.length) {
         return {
           ok: false,
-          detail: "No tabs were closed because they may contain editable work."
+          detail: "No tabs were closed because they are pinned or contain unsaved edits."
         };
       }
 
@@ -549,7 +551,7 @@
         skipped,
         detail: `Closed ${safeTabs.length} ${context.groupTitle} tab${
           safeTabs.length === 1 ? "" : "s"
-        }${skipped ? `; kept ${skipped} potentially editable` : ""}.`
+        }${skipped ? `; kept ${skipped} protected` : ""}.`
       };
     }
 

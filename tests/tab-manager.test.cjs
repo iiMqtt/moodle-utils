@@ -142,7 +142,11 @@ function createHarness() {
       },
       async sendMessage(tabId, message) {
         if (message.type === "CHECK_TAB_SAFE_TO_CLOSE") {
-          return { safe: tabs.get(tabId)?.safe !== false };
+          const tab = tabs.get(tabId);
+          return {
+            safe: tab?.safe !== false && tab?.dirty !== true,
+            safeUserInitiated: tab?.dirty !== true
+          };
         }
         return null;
       },
@@ -166,7 +170,7 @@ async function run() {
   const manifest = JSON.parse(
     fs.readFileSync(path.join(__dirname, "..", "manifest.json"), "utf8")
   );
-  assert.equal(manifest.version, "2.3.0");
+  assert.equal(manifest.version, "2.3.1");
   assert.equal(manifest.permissions.includes("tabGroups"), true);
   assert.equal(
     manifest.permissions.includes("declarativeNetRequest"),
@@ -319,23 +323,55 @@ async function run() {
   assert.equal(protectedResult.closed, 0);
   assert.equal(harness.tabs.has(4), true);
 
+  harness.tabs.set(5, {
+    id: 5,
+    windowId: 1,
+    groupId: -1,
+    active: false,
+    pinned: false,
+    safe: false,
+    dirty: true,
+    title: "Edited assignment",
+    url: "https://moodle.telt.unsw.edu.au/mod/assign/view.php?id=10"
+  });
+  manager.onTabCreated({ id: 5 });
+  const editedResult = await manager.onCourseContext(
+    {
+      context: {
+        courseId: "99647",
+        courseCode: "ELEC2133",
+        courseName: "ELEC2133 - Analogue Electronics",
+        url: harness.tabs.get(5).url
+      }
+    },
+    { tab: { ...harness.tabs.get(5) } }
+  );
+  assert.equal(editedResult.managed, true);
+
   for (const tab of harness.tabs.values()) {
     tab.active = false;
   }
   harness.tabs.get(3).active = true;
   const closeResult = await manager.closeCourseTabs();
-  assert.equal(closeResult.closed, 1);
+  assert.equal(closeResult.closed, 2);
   assert.equal(closeResult.skipped, 1);
   assert.equal(harness.tabs.has(3), false);
-  assert.equal(harness.tabs.has(4), true);
+  assert.equal(harness.tabs.has(4), false);
+  assert.equal(harness.tabs.has(5), true);
   assert.equal(harness.storage.moodleUtilsCourseWorkspaces.length, 1);
-  assert.equal(
-    harness.storage.moodleUtilsCourseWorkspaces[0].tabs[0].url,
-    "https://moodle.telt.unsw.edu.au/mod/quiz/view.php?id=9"
+  assert.deepEqual(
+    Array.from(
+      harness.storage.moodleUtilsCourseWorkspaces[0].tabs,
+      (tab) => tab.url
+    ),
+    [
+      "https://moodle.telt.unsw.edu.au/mod/quiz/view.php?id=9",
+      "https://moodle.telt.unsw.edu.au/mod/quiz/view.php?id=9"
+    ]
   );
 
   const restoreResult = await manager.restoreWorkspace("99647");
-  assert.equal(restoreResult.restored, 1);
+  assert.equal(restoreResult.restored, 2);
 
   process.stdout.write("tab manager tests passed\n");
 }

@@ -50,7 +50,7 @@ function createHarness() {
     },
     runtime: {
       getManifest() {
-        return { version: "2.2.0" };
+        return { version: "2.3.1" };
       },
       onInstalled: eventStub(),
       onMessage: eventStub(),

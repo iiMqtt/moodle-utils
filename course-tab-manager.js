@@ -53,29 +53,51 @@
     if (!control) {
       return false;
     }
-    if (control.matches("input[type='hidden'], input[type='button'], input[type='submit'], input[type='reset'], input[type='search']")) {
+    if (
+      control.matches(
+        [
+          "input[type='hidden']",
+          "input[type='button']",
+          "input[type='submit']",
+          "input[type='reset']",
+          "input[type='search']",
+          "input[aria-label='Search']",
+          "input[placeholder='Search']",
+          "input[name^='message-searchinput']",
+          "select#jump-to-activity"
+        ].join(",")
+      )
+    ) {
       return false;
     }
     return true;
   }
 
   function hasEditableForm() {
-    return Boolean(
-      document.querySelector(
-        [
-          "textarea",
-          "[contenteditable='true']",
-          "input:not([type])",
-          "input[type='text']",
-          "input[type='email']",
-          "input[type='number']",
-          "input[type='file']",
-          "input[type='checkbox']",
-          "input[type='radio']",
-          "select"
-        ].join(",")
-      )
+    const controls = document.querySelectorAll(
+      [
+        "textarea",
+        "[contenteditable='true']",
+        "input:not([type])",
+        "input[type='text']",
+        "input[type='email']",
+        "input[type='number']",
+        "input[type='file']",
+        "input[type='checkbox']",
+        "input[type='radio']",
+        "select"
+      ].join(",")
     );
+    return [...controls].some((control) => {
+      const visible =
+        typeof control.checkVisibility === "function"
+          ? control.checkVisibility({
+              checkOpacity: true,
+              checkVisibilityCSS: true
+            })
+          : Boolean(control.offsetWidth || control.offsetHeight);
+      return visible && isEditableControl(control);
+    });
   }
 
   function courseLinks() {
@@ -239,10 +261,12 @@
     }
 
     if (message?.type === "CHECK_TAB_SAFE_TO_CLOSE") {
+      const editableForm = hasEditableForm();
       sendResponse({
-        safe: !dirty && !hasEditableForm(),
+        safe: !dirty && !editableForm,
+        safeUserInitiated: !dirty,
         dirty,
-        hasEditableForm: hasEditableForm()
+        hasEditableForm: editableForm
       });
     }
   });
