@@ -19,7 +19,8 @@
     keepalive: true,
     ltiAutoClose: true,
     sessionRecovery: true,
-    changedSinceLastVisit: true
+    changedSinceLastVisit: true,
+    courseTabManager: true
   };
 
   let settings = { ...DEFAULT_SETTINGS };

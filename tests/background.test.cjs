@@ -17,6 +17,7 @@ function createHarness() {
       {
         id: 41,
         windowId: 1,
+        groupId: -1,
         url: "https://moodle.telt.unsw.edu.au/course/view.php?id=99647"
       }
     ]
@@ -43,7 +44,7 @@ function createHarness() {
     },
     runtime: {
       getManifest() {
-        return { version: "2.1.0" };
+        return { version: "2.2.0" };
       },
       onInstalled: eventStub(),
       onMessage: eventStub(),
@@ -67,12 +68,14 @@ function createHarness() {
       }
     },
     tabs: {
+      onCreated: eventStub(),
       onRemoved: eventStub(),
       onUpdated: eventStub(),
       async create(options) {
         const tab = {
           id: nextTabId++,
           windowId: 1,
+          groupId: -1,
           url: options.url,
           active: options.active
         };
@@ -91,8 +94,14 @@ function createHarness() {
         return [];
       },
       async remove(tabId) {
-        removedTabs.push(tabId);
-        tabRecords.delete(tabId);
+        const tabIds = Array.isArray(tabId) ? tabId : [tabId];
+        for (const id of tabIds) {
+          removedTabs.push(id);
+          tabRecords.delete(id);
+        }
+      },
+      async group() {
+        return 1;
       },
       async sendMessage() {
         return { ok: true };
@@ -107,6 +116,13 @@ function createHarness() {
         return { ...tab };
       }
     },
+    tabGroups: {
+      TAB_GROUP_ID_NONE: -1,
+      async query() {
+        return [];
+      },
+      async update() {}
+    },
     windows: {
       async update() {}
     }
@@ -119,11 +135,17 @@ function createHarness() {
     setTimeout,
     clearTimeout
   });
-  const source = fs.readFileSync(
-    path.join(__dirname, "..", "background.js"),
-    "utf8"
-  );
-  vm.runInContext(source, context, { filename: "background.js" });
+  for (const filename of [
+    "tab-manager-core.js",
+    "tab-manager-background.js",
+    "background.js"
+  ]) {
+    const source = fs.readFileSync(
+      path.join(__dirname, "..", filename),
+      "utf8"
+    );
+    vm.runInContext(source, context, { filename });
+  }
 
   return {
     context,
@@ -140,6 +162,7 @@ async function run() {
 
   const defaultSettings = await context.getSettings();
   assert.equal(defaultSettings.changedSinceLastVisit, true);
+  assert.equal(defaultSettings.courseTabManager, true);
 
   assert.equal(
     context.normaliseDestination(

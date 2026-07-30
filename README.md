@@ -1,6 +1,6 @@
 # Moodle Utils
 
-A local Chrome Manifest V3 extension that combines four UNSW Moodle utilities:
+A local Chrome Manifest V3 extension that combines five UNSW Moodle utilities:
 
 1. **Keep Moodle signed in** — sends Moodle's lightweight
    `core_session_touch` heartbeat every four minutes using the proven standalone
@@ -13,10 +13,13 @@ A local Chrome Manifest V3 extension that combines four UNSW Moodle utilities:
 4. **Changed since last visit** — remembers each course page, highlights new
    and updated activities or sections, and lists removed items until you
    explicitly mark the changes as seen.
+5. **Course Tab Manager** — identifies Moodle tabs by course, groups them,
+   shortens their titles, prevents safe-to-close exact duplicates, and saves
+   restorable course workspaces.
 
 The Guardian verification runs shortly after the Session Keeper heartbeat so the
 two requests are staggered. Each feature can be enabled or disabled independently
-from the extension popup. All four are enabled by default.
+from the extension popup. All five are enabled by default.
 
 ## Update the currently installed extension
 
@@ -50,11 +53,36 @@ everything as new. On later visits:
 
 Snapshots stay in Chrome's local extension storage and never leave the browser.
 
+## Course Tab Manager
+
+Open **Course Tab Manager** from the main popup to use its dedicated menu.
+The conservative defaults:
+
+- Automatically group new Moodle tabs in the window where they opened.
+- Use short titles such as `ELEC2133 · Week 8 Quiz`.
+- Focus an existing tab instead of keeping a newly opened exact duplicate.
+- Preserve manually created groups and their colours.
+- Restrict course actions to the current window.
+- Refuse to close pinned tabs, edited pages, or pages containing editable
+  controls.
+
+**Organise open tabs** groups currently ungrouped Moodle pages and safely removes
+exact duplicates. **Close course tabs** first records their sanitised URLs as a
+local workspace. **Restore workspace** reopens and regroups the most recently
+saved course workspace.
+
+The optional settings can move tabs out of existing manual groups, include all
+browser windows in course actions, or choose a fixed colour for newly created
+groups.
+
 ## Security and limits
 
 - The extension runs only on `https://moodle.telt.unsw.edu.au/*`.
 - It never reads or stores passwords, authentication codes, or cookies.
+- Chrome's `tabGroups` permission is used only to view and manage tab groups.
 - Saved recovery URLs have Moodle `sesskey` parameters removed.
+- Saved workspace URLs also have transient `sesskey` and notification
+  parameters removed.
 - A sleeping or powered-off laptop cannot send requests.
 - Password, MFA, CAPTCHA, and university-enforced absolute session limits cannot
   be bypassed.
@@ -68,6 +96,7 @@ Run the local test suite with the bundled Node runtime:
 node tests\background.test.cjs
 node tests\feature-scripts.test.cjs
 node tests\change-detector-core.test.cjs
+node tests\tab-manager.test.cjs
 ```
 
 ## Logo

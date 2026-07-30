@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="popup.css">
   </head>
   <body>
-    <main>
+    <main id="main-view">
       <header class="brand">
         <img src="icons/icon-48.png" alt="" width="44" height="44">
         <div>
@@ -16,7 +16,7 @@
         </div>
       </header>
 
-      <section class="features" aria-label="Features">
+      <section class="features main-features" aria-label="Features">
         <label class="feature">
           <span class="feature-copy">
             <strong>Keep Moodle signed in</strong>
@@ -52,7 +52,24 @@
           <input id="changedSinceLastVisit" type="checkbox">
           <span class="switch" aria-hidden="true"></span>
         </label>
+
+        <label class="feature">
+          <span class="feature-copy">
+            <strong>Organise course tabs</strong>
+            <small>Group Moodle tabs and protect against exact duplicates.</small>
+          </span>
+          <input id="courseTabManager" type="checkbox">
+          <span class="switch" aria-hidden="true"></span>
+        </label>
       </section>
+
+      <button id="open-tab-manager" class="menu-button" type="button">
+        <span>
+          <strong>Course Tab Manager</strong>
+          <small>Settings, course actions, and workspaces</small>
+        </span>
+        <span class="chevron" aria-hidden="true">›</span>
+      </button>
 
       <section class="status" aria-live="polite">
         <span class="status-dot"></span>
@@ -67,6 +84,99 @@
         Passwords and authentication codes remain with UNSW and Microsoft.
         <span id="save-state" aria-live="polite"></span>
       </p>
+    </main>
+
+    <main id="tab-manager-view" hidden>
+      <header class="subheader">
+        <button id="close-tab-manager" class="back-button" type="button" aria-label="Back to Moodle Utils">‹</button>
+        <div>
+          <h1>Course Tab Manager</h1>
+          <p>Organise Moodle by course</p>
+        </div>
+      </header>
+
+      <section class="manager-summary" aria-live="polite">
+        <span class="course-mark" aria-hidden="true">M</span>
+        <div>
+          <strong id="manager-course">Checking current tab…</strong>
+          <p id="manager-course-detail">Looking for a Moodle course.</p>
+        </div>
+      </section>
+
+      <section class="manager-actions" aria-label="Course actions">
+        <button type="button" data-manager-action="ORGANISE_COURSE_TABS">Organise open tabs</button>
+        <button type="button" data-manager-action="FOCUS_COURSE_TABS">Focus this course</button>
+        <button class="danger-action" type="button" data-manager-action="CLOSE_COURSE_TABS">Close course tabs</button>
+        <button id="restore-workspace" type="button" data-manager-action="RESTORE_COURSE_WORKSPACE">Restore workspace</button>
+      </section>
+
+      <h2 class="section-heading">Settings</h2>
+      <section class="features manager-settings" aria-label="Course Tab Manager settings">
+        <label class="feature compact">
+          <span class="feature-copy">
+            <strong>Group tabs automatically</strong>
+            <small>Place new Moodle tabs into their course group.</small>
+          </span>
+          <input id="autoGroup" type="checkbox" data-manager-setting>
+          <span class="switch" aria-hidden="true"></span>
+        </label>
+
+        <label class="feature compact">
+          <span class="feature-copy">
+            <strong>Shorter tab titles</strong>
+            <small>Use titles such as “ELEC2133 · Week 8 Quiz”.</small>
+          </span>
+          <input id="shortenTitles" type="checkbox" data-manager-setting>
+          <span class="switch" aria-hidden="true"></span>
+        </label>
+
+        <label class="feature compact">
+          <span class="feature-copy">
+            <strong>Prevent exact duplicates</strong>
+            <small>Focus the existing tab when the same URL opens again.</small>
+          </span>
+          <input id="preventDuplicates" type="checkbox" data-manager-setting>
+          <span class="switch" aria-hidden="true"></span>
+        </label>
+
+        <label class="feature compact">
+          <span class="feature-copy">
+            <strong>Move manually grouped tabs</strong>
+            <small>Allow Moodle Utils to reorganise existing groups.</small>
+          </span>
+          <input id="moveExistingGroups" type="checkbox" data-manager-setting>
+          <span class="switch" aria-hidden="true"></span>
+        </label>
+
+        <label class="feature compact">
+          <span class="feature-copy">
+            <strong>Include every window</strong>
+            <small>Course actions normally affect the current window only.</small>
+          </span>
+          <input id="allWindows" type="checkbox" data-manager-setting>
+          <span class="switch" aria-hidden="true"></span>
+        </label>
+
+        <label class="select-feature">
+          <span>
+            <strong>New group colour</strong>
+            <small>Existing group colours are preserved.</small>
+          </span>
+          <select id="groupColor" data-manager-setting>
+            <option value="auto">Automatic</option>
+            <option value="blue">Blue</option>
+            <option value="green">Green</option>
+            <option value="purple">Purple</option>
+            <option value="cyan">Cyan</option>
+            <option value="orange">Orange</option>
+            <option value="pink">Pink</option>
+            <option value="red">Red</option>
+            <option value="yellow">Yellow</option>
+          </select>
+        </label>
+      </section>
+
+      <p id="manager-result" class="manager-result" aria-live="polite"></p>
     </main>
     <script src="popup.js"></script>
   </body>

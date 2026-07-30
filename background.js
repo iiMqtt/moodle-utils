@@ -1,5 +1,9 @@
 "use strict";
 
+if (typeof importScripts === "function") {
+  importScripts("tab-manager-core.js", "tab-manager-background.js");
+}
+
 const MOODLE_ORIGIN = "https://moodle.telt.unsw.edu.au";
 const OIDC_URL = `${MOODLE_ORIGIN}/auth/oidc/?source=loginpage`;
 const STATE_KEY = "moodleGuardianState";
@@ -17,9 +21,11 @@ const DEFAULT_SETTINGS = Object.freeze({
   keepalive: true,
   ltiAutoClose: true,
   sessionRecovery: true,
-  changedSinceLastVisit: true
+  changedSinceLastVisit: true,
+  courseTabManager: true
 });
 
+const tabManager = globalThis.MoodleUtilsCreateTabManager(chrome);
 let authLaunchLock = false;
 let completionLock = false;
 let startSequence = Promise.resolve();
@@ -686,6 +692,11 @@ async function injectIntoExistingMoodleTabs() {
         const injections = [
           chrome.scripting.executeScript({
             target: { tabId: tab.id },
+            files: ["tab-manager-core.js", "course-tab-manager.js"],
+            world: "ISOLATED"
+          }),
+          chrome.scripting.executeScript({
+            target: { tabId: tab.id },
             files: ["change-detector-core.js", "changed-since-last-visit.js"],
             world: "ISOLATED"
           }),
@@ -736,6 +747,7 @@ async function initialise() {
   const settings = await getSettings();
   await chrome.alarms.clear(LEGACY_GUARDIAN_ALARM);
   await configureGuardianAlarm(settings);
+  await tabManager.initialise();
   await getState();
   await validateRecoveryTab();
   await ensureCurrentBuildInjected();
@@ -783,6 +795,8 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  tabManager.onTabUpdated(tabId, changeInfo, tab);
+
   if (changeInfo.url && isSafeDestination(changeInfo.url)) {
     void rememberDestination(tabId, changeInfo.url);
   }
@@ -810,7 +824,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   })();
 });
 
+chrome.tabs.onCreated.addListener((tab) => {
+  tabManager.onTabCreated(tab);
+});
+
 chrome.tabs.onRemoved.addListener((tabId) => {
+  tabManager.onTabRemoved(tabId);
   void forgetDestination(tabId);
   void finishTabRemoval(tabId);
 });
@@ -835,6 +854,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         break;
       case "GET_SETTINGS":
         sendResponse(await getSettings());
+        break;
+      case "COURSE_TAB_CONTEXT":
+        sendResponse(await tabManager.onCourseContext(message, sender));
+        break;
+      case "GET_TAB_MANAGER_SETTINGS":
+        sendResponse(await tabManager.getSettings());
+        break;
+      case "UPDATE_TAB_MANAGER_SETTINGS":
+        sendResponse(await tabManager.updateSettings(message.settings));
+        break;
+      case "GET_TAB_MANAGER_STATUS":
+        sendResponse(await tabManager.getStatus());
+        break;
+      case "ORGANISE_COURSE_TABS":
+        sendResponse(await tabManager.organiseOpenTabs());
+        break;
+      case "FOCUS_COURSE_TABS":
+        sendResponse(await tabManager.focusCourseTabs());
+        break;
+      case "CLOSE_COURSE_TABS":
+        sendResponse(await tabManager.closeCourseTabs());
+        break;
+      case "RESTORE_COURSE_WORKSPACE":
+        sendResponse(
+          await tabManager.restoreWorkspace(message.courseId || null)
+        );
         break;
       case "UPDATE_SETTINGS": {
         const current = await getSettings();
