@@ -17,12 +17,14 @@ const GUARDIAN_CHECK_MINUTES = 4;
 const GUARDIAN_STAGGER_MS = 12 * 1000;
 const RECOVERY_TIMEOUT_MINUTES = 0.5;
 const MAX_STATE_AGE_MS = 10 * 60 * 1000;
+const FEEDBACK_POPUP_RULE_ID = 23001;
 const DEFAULT_SETTINGS = Object.freeze({
   keepalive: true,
   ltiAutoClose: true,
   sessionRecovery: true,
   changedSinceLastVisit: true,
-  courseTabManager: true
+  courseTabManager: true,
+  blockMyExperiencePopup: true
 });
 
 const tabManager = globalThis.MoodleUtilsCreateTabManager(chrome);
@@ -59,6 +61,30 @@ async function configureGuardianAlarm(settings = null) {
   await chrome.alarms.create(GUARDIAN_ALARM, {
     delayInMinutes: 0.5,
     periodInMinutes: GUARDIAN_CHECK_MINUTES
+  });
+}
+
+async function configureFeedbackPopupRule(settings = null) {
+  const currentSettings = settings || (await getSettings());
+  const addRules = currentSettings.blockMyExperiencePopup
+    ? [
+        {
+          id: FEEDBACK_POPUP_RULE_ID,
+          priority: 1,
+          action: { type: "block" },
+          condition: {
+            urlFilter:
+              "||myexperience.unsw.edu.au/unswBlueConnector/*Scripts/Moodle/BlueMoodle.min.js",
+            initiatorDomains: ["moodle.telt.unsw.edu.au"],
+            resourceTypes: ["script"]
+          }
+        }
+      ]
+    : [];
+
+  await chrome.declarativeNetRequest.updateDynamicRules({
+    removeRuleIds: [FEEDBACK_POPUP_RULE_ID],
+    addRules
   });
 }
 
@@ -692,6 +718,11 @@ async function injectIntoExistingMoodleTabs() {
         const injections = [
           chrome.scripting.executeScript({
             target: { tabId: tab.id },
+            files: ["feedback-popup-blocker.js"],
+            world: "ISOLATED"
+          }),
+          chrome.scripting.executeScript({
+            target: { tabId: tab.id },
             files: ["tab-manager-core.js", "course-tab-manager.js"],
             world: "ISOLATED"
           }),
@@ -747,6 +778,7 @@ async function initialise() {
   const settings = await getSettings();
   await chrome.alarms.clear(LEGACY_GUARDIAN_ALARM);
   await configureGuardianAlarm(settings);
+  await configureFeedbackPopupRule(settings);
   await tabManager.initialise();
   await getState();
   await validateRecoveryTab();
@@ -790,6 +822,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
       ...(changes[SETTINGS_KEY].newValue || {})
     };
     await configureGuardianAlarm(settings);
+    await configureFeedbackPopupRule(settings);
     await broadcastSettings(settings);
   })();
 });

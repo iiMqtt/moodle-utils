@@ -166,10 +166,24 @@ async function run() {
   const manifest = JSON.parse(
     fs.readFileSync(path.join(__dirname, "..", "manifest.json"), "utf8")
   );
-  assert.equal(manifest.version, "2.2.0");
+  assert.equal(manifest.version, "2.3.0");
   assert.equal(manifest.permissions.includes("tabGroups"), true);
   assert.equal(
-    manifest.content_scripts[0].js.includes("course-tab-manager.js"),
+    manifest.permissions.includes("declarativeNetRequest"),
+    true
+  );
+  assert.equal(
+    manifest.content_scripts.some((entry) =>
+      entry.js.includes("course-tab-manager.js")
+    ),
+    true
+  );
+  assert.equal(
+    manifest.content_scripts.some(
+      (entry) =>
+        entry.run_at === "document_start" &&
+        entry.js.includes("feedback-popup-blocker.js")
+    ),
     true
   );
 
@@ -179,6 +193,7 @@ async function run() {
   );
   for (const controlId of [
     "courseTabManager",
+    "blockMyExperiencePopup",
     "autoGroup",
     "shortenTitles",
     "preventDuplicates",

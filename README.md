@@ -1,6 +1,6 @@
 # Moodle Utils
 
-A local Chrome Manifest V3 extension that combines five UNSW Moodle utilities:
+A local Chrome Manifest V3 extension that combines six UNSW Moodle utilities:
 
 1. **Keep Moodle signed in** — sends Moodle's lightweight
    `core_session_touch` heartbeat every four minutes using the proven standalone
@@ -16,10 +16,12 @@ A local Chrome Manifest V3 extension that combines five UNSW Moodle utilities:
 5. **Course Tab Manager** — identifies Moodle tabs by course, groups them,
    shortens their titles, prevents safe-to-close exact duplicates, and saves
    restorable course workspaces.
+6. **Block myExperience popup** — prevents UNSW's recurring course-feedback
+   survey prompt from loading and removes an already-injected copy.
 
 The Guardian verification runs shortly after the Session Keeper heartbeat so the
 two requests are staggered. Each feature can be enabled or disabled independently
-from the extension popup. All five are enabled by default.
+from the extension popup. All six are enabled by default.
 
 ## Update the currently installed extension
 
@@ -75,11 +77,21 @@ The optional settings can move tabs out of existing manual groups, include all
 browser windows in course actions, or choose a fixed colour for newly created
 groups.
 
+## myExperience popup blocker
+
+The blocker targets only the external `BlueMoodle.min.js` integration used for
+the recurring **Please provide feedback for the following courses** prompt. A
+fallback content check also removes that exact prompt if it was injected before
+the network rule became active. Ordinary Moodle dialogs, announcements, tours,
+and manually opened myExperience activities are not blocked.
+
 ## Security and limits
 
 - The extension runs only on `https://moodle.telt.unsw.edu.au/*`.
 - It never reads or stores passwords, authentication codes, or cookies.
 - Chrome's `tabGroups` permission is used only to view and manage tab groups.
+- Chrome's `declarativeNetRequest` permission blocks the single myExperience
+  popup-integration script without reading any network traffic.
 - Saved recovery URLs have Moodle `sesskey` parameters removed.
 - Saved workspace URLs also have transient `sesskey` and notification
   parameters removed.

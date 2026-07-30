@@ -25,6 +25,7 @@ function createHarness() {
   const createdTabs = [];
   const updatedTabs = [];
   const removedTabs = [];
+  const dynamicRuleUpdates = [];
   let nextTabId = 900;
 
   const chrome = {
@@ -40,6 +41,11 @@ function createHarness() {
       async create() {},
       async get() {
         return undefined;
+      }
+    },
+    declarativeNetRequest: {
+      async updateDynamicRules(options) {
+        dynamicRuleUpdates.push(options);
       }
     },
     runtime: {
@@ -152,17 +158,45 @@ function createHarness() {
     storage,
     createdTabs,
     updatedTabs,
-    removedTabs
+    removedTabs,
+    dynamicRuleUpdates
   };
 }
 
 async function run() {
   const harness = createHarness();
-  const { context, storage, createdTabs, updatedTabs, removedTabs } = harness;
+  const {
+    context,
+    storage,
+    createdTabs,
+    updatedTabs,
+    removedTabs,
+    dynamicRuleUpdates
+  } = harness;
 
   const defaultSettings = await context.getSettings();
   assert.equal(defaultSettings.changedSinceLastVisit, true);
   assert.equal(defaultSettings.courseTabManager, true);
+  assert.equal(defaultSettings.blockMyExperiencePopup, true);
+
+  await context.configureFeedbackPopupRule({
+    blockMyExperiencePopup: true
+  });
+  const enabledRuleUpdate = dynamicRuleUpdates.find(
+    (update) => update.addRules.length === 1
+  );
+  assert.ok(enabledRuleUpdate);
+  assert.match(
+    enabledRuleUpdate.addRules[0].condition.urlFilter,
+    /BlueMoodle\.min\.js/
+  );
+  await context.configureFeedbackPopupRule({
+    blockMyExperiencePopup: false
+  });
+  assert.equal(
+    dynamicRuleUpdates.some((update) => update.addRules.length === 0),
+    true
+  );
 
   assert.equal(
     context.normaliseDestination(

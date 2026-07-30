@@ -14,7 +14,8 @@
     ltiAutoClose: true,
     sessionRecovery: true,
     changedSinceLastVisit: true,
-    courseTabManager: true
+    courseTabManager: true,
+    blockMyExperiencePopup: true
   };
 
   let settings = { ...DEFAULT_SETTINGS };
