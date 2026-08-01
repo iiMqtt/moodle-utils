@@ -208,6 +208,11 @@ async function run() {
   await testKeepaliveSuccess();
   await testKeepaliveToggle();
   await testLtiAutoClose();
+  assert.match(
+    loadSource("content.js"),
+    /phase === "complete"[\s\S]*?removeOverlay\(\)/,
+    "completed recovery should explicitly dismiss its overlay"
+  );
   process.stdout.write("feature script tests passed\n");
 }
 

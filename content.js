@@ -262,6 +262,11 @@
       return;
     }
 
+    if (phase === "complete" || phase === "idle") {
+      removeOverlay();
+      return;
+    }
+
     const overlay = createOverlay();
     overlay.message.textContent = detail || "Reconnecting through UNSW…";
 

@@ -24,7 +24,9 @@ function createHarness() {
   ]);
   const createdTabs = [];
   const updatedTabs = [];
+  const reloadedTabs = [];
   const removedTabs = [];
+  const sentMessages = [];
   const dynamicRuleUpdates = [];
   let nextTabId = 900;
 
@@ -50,7 +52,7 @@ function createHarness() {
     },
     runtime: {
       getManifest() {
-        return { version: "2.3.1" };
+        return { version: "2.3.2" };
       },
       onInstalled: eventStub(),
       onMessage: eventStub(),
@@ -109,7 +111,11 @@ function createHarness() {
       async group() {
         return 1;
       },
-      async sendMessage() {
+      async reload(tabId) {
+        reloadedTabs.push(tabId);
+      },
+      async sendMessage(tabId, message) {
+        sentMessages.push({ tabId, message });
         return { ok: true };
       },
       async update(tabId, changes) {
@@ -157,8 +163,11 @@ function createHarness() {
     context,
     storage,
     createdTabs,
+    tabRecords,
     updatedTabs,
+    reloadedTabs,
     removedTabs,
+    sentMessages,
     dynamicRuleUpdates
   };
 }
@@ -169,8 +178,11 @@ async function run() {
     context,
     storage,
     createdTabs,
+    tabRecords,
     updatedTabs,
+    reloadedTabs,
     removedTabs,
+    sentMessages,
     dynamicRuleUpdates
   } = harness;
 
@@ -253,6 +265,10 @@ async function run() {
     true
   );
 
+  const restoredUrl =
+    "https://moodle.telt.unsw.edu.au/course/view.php?id=99647#section-10";
+  tabRecords.get(41).url = restoredUrl;
+
   await context.handlePageState(
     {
       state: "authenticated",
@@ -263,16 +279,31 @@ async function run() {
 
   state = storage.moodleGuardianState;
   assert.equal(state.inProgress, false);
+  assert.equal(reloadedTabs.includes(41), true);
   assert.equal(
-    updatedTabs.some(
-      (update) =>
-        update.tabId === 41 &&
-        update.changes.url ===
-          "https://moodle.telt.unsw.edu.au/course/view.php?id=99647#section-10"
+    sentMessages.some(
+      ({ tabId, message }) =>
+        tabId === 41 &&
+        message.type === "RECOVERY_STATUS" &&
+        message.phase === "complete"
     ),
     true
   );
   assert.deepEqual(removedTabs, [authTabId]);
+
+  storage.moodleGuardianState = {
+    ...storage.moodleGuardianState,
+    inProgress: true,
+    startedAt: Date.now(),
+    phase: "restoring",
+    authTabId: null,
+    pending: {
+      "41": { url: restoredUrl, addedAt: Date.now() }
+    }
+  };
+  await context.validateRecoveryTab();
+  assert.equal(storage.moodleGuardianState.inProgress, false);
+  assert.equal(reloadedTabs.filter((tabId) => tabId === 41).length, 2);
 
   storage.moodleUtilsSettings = {
     keepalive: true,

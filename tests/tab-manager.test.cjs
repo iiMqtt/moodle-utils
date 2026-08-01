@@ -170,7 +170,7 @@ async function run() {
   const manifest = JSON.parse(
     fs.readFileSync(path.join(__dirname, "..", "manifest.json"), "utf8")
   );
-  assert.equal(manifest.version, "2.3.1");
+  assert.equal(manifest.version, "2.3.2");
   assert.equal(manifest.permissions.includes("tabGroups"), true);
   assert.equal(
     manifest.permissions.includes("declarativeNetRequest"),

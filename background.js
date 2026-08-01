@@ -481,12 +481,22 @@ async function completeRecovery(state) {
       }
 
       try {
-        await chrome.tabs.get(tabId);
-        await chrome.tabs.update(tabId, { url: destination });
+        const tab = await chrome.tabs.get(tabId);
+        if (tab.url === destination) {
+          await chrome.tabs.reload(tabId);
+        } else {
+          await chrome.tabs.update(tabId, { url: destination });
+        }
       } catch {
         // A tab closed while authentication was in progress.
       }
     }
+
+    await notifyPending(
+      latestState,
+      "complete",
+      "Moodle restored. Returning you to your page…"
+    );
 
     if (
       Number.isInteger(authTabId) &&
@@ -509,6 +519,11 @@ async function completeRecovery(state) {
 async function validateRecoveryTab() {
   const state = await getState();
   if (!state.inProgress) {
+    return;
+  }
+
+  if (state.phase === "restoring") {
+    await completeRecovery(state);
     return;
   }
 
@@ -647,7 +662,12 @@ async function handlePageState(message, sender) {
     }
   }
 
-  if (message.state === "authenticated" && isAuthTab) {
+  if (
+    message.state === "authenticated" &&
+    (isAuthTab ||
+      (state.inProgress &&
+        (state.phase === "restoring" || state.pending[String(tabId)])))
+  ) {
     await completeRecovery(state);
     return { managed: true, phase: "complete" };
   }
