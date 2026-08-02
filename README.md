@@ -14,10 +14,6 @@ A local Chrome Manifest V3 extension that combines six UNSW Moodle utilities:
 6. Optionally pin **Moodle Utils** from Chrome's Extensions menu for quick
    access to its feature switches and Course Tab Manager.
 
-If the older standalone **UNSW Moodle Session Keeper**, **UNSW Moodle Session
-Guardian**, or **UNSW Moodle LTI Auto-Close** extensions are installed, disable
-or remove them to avoid running duplicate scripts.
-
 To install a later update, replace or update the files in the same folder, open
 `chrome://extensions`, and click **Reload** on Moodle Utils. Existing Moodle
 tabs should update automatically; refresh a discarded or unresponsive tab once
