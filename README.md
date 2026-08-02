@@ -2,6 +2,29 @@
 
 A local Chrome Manifest V3 extension that combines six UNSW Moodle utilities:
 
+## Installation
+
+1. Download or clone this repository into a permanent folder. Do not delete or
+   move that folder after installation unless you load it again from its new
+   location.
+2. Open `chrome://extensions` in Chrome.
+3. Enable **Developer mode** in the top-right corner.
+4. Click **Load unpacked**.
+5. Select the Moodle Utils folder containing `manifest.json`.
+6. Optionally pin **Moodle Utils** from Chrome's Extensions menu for quick
+   access to its feature switches and Course Tab Manager.
+
+If the older standalone **UNSW Moodle Session Keeper**, **UNSW Moodle Session
+Guardian**, or **UNSW Moodle LTI Auto-Close** extensions are installed, disable
+or remove them to avoid running duplicate scripts.
+
+To install a later update, replace or update the files in the same folder, open
+`chrome://extensions`, and click **Reload** on Moodle Utils. Existing Moodle
+tabs should update automatically; refresh a discarded or unresponsive tab once
+if Chrome could not inject the updated scripts.
+
+## Included utilities
+
 1. **Keep Moodle signed in** — sends Moodle's lightweight
    `core_session_touch` heartbeat every four minutes using the proven standalone
    Session Keeper logic.
@@ -22,20 +45,6 @@ A local Chrome Manifest V3 extension that combines six UNSW Moodle utilities:
 The Guardian verification runs shortly after the Session Keeper heartbeat so the
 two requests are staggered. Each feature can be enabled or disabled independently
 from the extension popup. All six are enabled by default.
-
-## Update the currently installed extension
-
-This folder is the same unpacked-extension folder used by the previous
-**UNSW Moodle Session Guardian** build.
-
-1. Open `chrome://extensions`.
-2. Find the extension, now named **Moodle Utils**.
-3. Click its **Reload** button.
-4. Disable or remove the old standalone **UNSW Moodle Session Keeper** and
-   **UNSW Moodle LTI Auto-Close** extensions to avoid duplicate scripts.
-
-Existing Moodle tabs are injected automatically when Moodle Utils reloads. If
-Chrome declines to inject into a discarded tab, reload that tab once.
 
 ## Keepalive feedback
 
