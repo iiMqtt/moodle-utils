@@ -12,6 +12,10 @@
     "time",
     "moodle_utils_probe"
   ]);
+  const LEGACY_UNTITLED_SECTION_TITLES = new Set([
+    "untitled course section",
+    "untitled moodle item"
+  ]);
 
   function normaliseWhitespace(value) {
     return String(value || "")
@@ -85,6 +89,65 @@
     };
   }
 
+  function isLegacyUntitledSection(item) {
+    return (
+      item?.kind === "section" &&
+      LEGACY_UNTITLED_SECTION_TITLES.has(
+        normaliseWhitespace(item.title).toLowerCase()
+      )
+    );
+  }
+
+  function migrateLegacyUntitledSections(previousSnapshot, currentSnapshot) {
+    const current = prepareSnapshot(currentSnapshot);
+    const currentByKey = new Map(
+      current.items.map((item) => [item.key, item])
+    );
+    const migratedItems = [];
+    let changed = false;
+
+    for (const rawItem of Array.isArray(previousSnapshot?.items)
+      ? previousSnapshot.items
+      : []) {
+      const item = prepareItem(rawItem);
+      if (!item.key) {
+        continue;
+      }
+      if (!isLegacyUntitledSection(item)) {
+        migratedItems.push(item);
+        continue;
+      }
+
+      changed = true;
+      const replacement = currentByKey.get(item.key);
+      if (replacement && !isLegacyUntitledSection(replacement)) {
+        migratedItems.push(replacement);
+      }
+    }
+
+    if (changed) {
+      const migratedKeys = new Set(migratedItems.map((item) => item.key));
+      for (const item of current.items) {
+        if (
+          item.kind === "section" &&
+          !isLegacyUntitledSection(item) &&
+          !migratedKeys.has(item.key)
+        ) {
+          migratedItems.push(item);
+          migratedKeys.add(item.key);
+        }
+      }
+    }
+
+    return {
+      changed,
+      snapshot: prepareSnapshot({
+        ...(previousSnapshot || {}),
+        items: migratedItems
+      })
+    };
+  }
+
   function diffSnapshots(previousSnapshot, currentSnapshot) {
     const previous = prepareSnapshot(previousSnapshot);
     const current = prepareSnapshot(currentSnapshot);
@@ -118,6 +181,7 @@
     canonicaliseUrl,
     diffSnapshots,
     fingerprint,
+    migrateLegacyUntitledSections,
     normaliseWhitespace,
     prepareItem,
     prepareSnapshot

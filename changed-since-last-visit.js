@@ -23,6 +23,15 @@
     courseTabManager: true,
     blockMyExperiencePopup: true
   };
+  const SECTION_TITLE_SELECTORS = [
+    ":scope > .content .sectionname",
+    ":scope > .section-item .sectionname",
+    ":scope > [data-for='section_title']",
+    ":scope .sectionname",
+    ":scope [data-for='section_title']",
+    ":scope h3[id^='coursecontentsection']",
+    ":scope > .content > h3"
+  ];
 
   let settings = { ...DEFAULT_SETTINGS };
   let observer = null;
@@ -94,12 +103,7 @@
       "";
     return {
       key: rawId ? `section:${rawId}` : "",
-      title: directText(section, [
-        ":scope > .content .sectionname",
-        ":scope > .section-item .sectionname",
-        ":scope > [data-for='section_title']",
-        ":scope > .content > h3"
-      ])
+      title: directText(section, SECTION_TITLE_SELECTORS)
     };
   }
 
@@ -167,12 +171,10 @@
       element.dataset.id ||
       element.dataset.sectionid ||
       element.id.match(/section-(\d+)/)?.[1];
-    const title = directText(element, [
-      ":scope > .content .sectionname",
-      ":scope > .section-item .sectionname",
-      ":scope > [data-for='section_title']",
-      ":scope > .content > h3"
-    ]);
+    const title = directText(element, SECTION_TITLE_SELECTORS);
+    if (!title) {
+      return null;
+    }
     const details = directText(element, [
       ":scope > .content .summary",
       ":scope > .section-item .summary",
@@ -182,7 +184,7 @@
     return core.prepareItem({
       key: id ? `section:${id}` : `section-text:${title}`,
       kind: "section",
-      title: title || "Untitled course section",
+      title,
       url: "",
       section: title,
       container: "",
@@ -235,7 +237,7 @@
 
     for (const element of sectionElements()) {
       const item = extractSection(element);
-      if (!item.key || seenKeys.has(item.key)) {
+      if (!item?.key || seenKeys.has(item.key)) {
         continue;
       }
       seenKeys.add(item.key);
@@ -577,6 +579,14 @@
         "Moodle Utils is now watching this course for changes."
       );
       return;
+    }
+
+    const migration = core.migrateLegacyUntitledSections?.(
+      baselineSnapshot,
+      currentSnapshot
+    );
+    if (migration?.changed) {
+      baselineSnapshot = await saveSnapshot(context, migration.snapshot);
     }
 
     renderDiff(core.diffSnapshots(baselineSnapshot, currentSnapshot), context);

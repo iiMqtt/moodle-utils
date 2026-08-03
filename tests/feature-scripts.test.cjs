@@ -213,6 +213,17 @@ async function run() {
     /phase === "complete"[\s\S]*?removeOverlay\(\)/,
     "completed recovery should explicitly dismiss its overlay"
   );
+  const changeDetectorSource = loadSource("changed-since-last-visit.js");
+  assert.match(
+    changeDetectorSource,
+    /:scope \.sectionname/,
+    "section titles should be found in nested Moodle markup"
+  );
+  assert.match(
+    changeDetectorSource,
+    /if \(!title\) \{\s*return null;/,
+    "partially rendered titleless sections should not be snapshotted"
+  );
   process.stdout.write("feature script tests passed\n");
 }
 

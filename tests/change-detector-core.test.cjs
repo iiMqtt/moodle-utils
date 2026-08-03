@@ -39,6 +39,18 @@ function item(key, title, details = "", url = "", section = "Week 7") {
   };
 }
 
+function section(key, title, details = "") {
+  return {
+    key,
+    kind: "section",
+    title,
+    details,
+    url: "",
+    section: title,
+    container: ""
+  };
+}
+
 function plain(value) {
   return JSON.parse(JSON.stringify(value));
 }
@@ -113,6 +125,52 @@ function run() {
     { items: [item("activity:8", "Lecture", "", "", "Topic 7")] }
   );
   assert.equal(sectionRenameOnly.updated.length, 0);
+
+  const migrated = core.migrateLegacyUntitledSections(
+    {
+      courseId: "99647",
+      capturedAt: 123,
+      items: [
+        item("activity:8", "Lecture"),
+        section("section:7", "Untitled course section", "Old summary"),
+        section("section-text:", "Untitled course section")
+      ]
+    },
+    {
+      courseId: "99647",
+      items: [
+        item("activity:8", "Lecture"),
+        item("activity:9", "Forum 11 unread posts"),
+        section("section:7", "Week 7", "Current summary"),
+        section("section:8", "Week 8")
+      ]
+    }
+  );
+  assert.equal(migrated.changed, true);
+  assert.equal(migrated.snapshot.capturedAt, 123);
+  assert.equal(
+    migrated.snapshot.items.some(
+      (entry) => entry.title === "Untitled course section"
+    ),
+    false
+  );
+  const migratedDiff = plain(
+    core.diffSnapshots(migrated.snapshot, {
+      courseId: "99647",
+      items: [
+        item("activity:8", "Lecture"),
+        item("activity:9", "Forum 11 unread posts"),
+        section("section:7", "Week 7", "Current summary"),
+        section("section:8", "Week 8")
+      ]
+    })
+  );
+  assert.deepEqual(
+    migratedDiff.added.map((entry) => entry.key),
+    ["activity:9"]
+  );
+  assert.equal(migratedDiff.updated.length, 0);
+  assert.equal(migratedDiff.removed.length, 0);
 
   process.stdout.write("change detector core tests passed\n");
 }
