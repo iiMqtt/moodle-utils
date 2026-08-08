@@ -24,8 +24,9 @@ if Chrome could not inject the updated scripts.
 1. **Keep Moodle signed in** — sends Moodle's lightweight
    `core_session_touch` heartbeat every four minutes using the proven standalone
    Session Keeper logic.
-2. **Close Mobius launch tabs** — closes the redundant Moodle LTI intermediate
-   tab 1.2 seconds after Mobius opens, using the proven standalone LTI logic.
+2. **Close Mobius launch tabs** — conceals the redundant Moodle LTI handoff
+   immediately, returns focus to the originating Moodle tab, then closes the
+   hidden launch tab 1.2 seconds after Mobius opens.
 3. **Restore expired sessions** — verifies the session with an authenticated
    `/my/` request every four minutes, starts one coordinated UNSW sign-in flow
    when needed, and returns affected tabs to their exact intended URLs.

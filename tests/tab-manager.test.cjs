@@ -170,7 +170,15 @@ async function run() {
   const manifest = JSON.parse(
     fs.readFileSync(path.join(__dirname, "..", "manifest.json"), "utf8")
   );
-  assert.equal(manifest.version, "2.3.3");
+  assert.equal(manifest.version, "2.3.4");
+  const ltiScript = manifest.content_scripts.find((entry) =>
+    entry.js.includes("lti-autoclose.js")
+  );
+  assert.equal(ltiScript.run_at, "document_start");
+  const mainContentScript = manifest.content_scripts.find((entry) =>
+    entry.js.includes("content.js")
+  );
+  assert.equal(mainContentScript.run_at, "document_idle");
   assert.equal(manifest.permissions.includes("tabGroups"), true);
   assert.equal(
     manifest.permissions.includes("declarativeNetRequest"),
