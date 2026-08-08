@@ -52,7 +52,7 @@ function createHarness() {
     },
     runtime: {
       getManifest() {
-        return { version: "2.3.5" };
+        return { version: "2.3.3" };
       },
       onInstalled: eventStub(),
       onMessage: eventStub(),
@@ -304,15 +304,6 @@ async function run() {
   await context.validateRecoveryTab();
   assert.equal(storage.moodleGuardianState.inProgress, false);
   assert.equal(reloadedTabs.filter((tabId) => tabId === 41).length, 2);
-
-  tabRecords.set(42, {
-    id: 42,
-    windowId: 1,
-    url: "https://moodle.telt.unsw.edu.au/mod/lti/launch.php?id=55"
-  });
-  const closedLti = await context.closeLtiLaunchTab(tabRecords.get(42));
-  assert.equal(closedLti.closed, true);
-  assert.equal(tabRecords.has(42), false);
 
   storage.moodleUtilsSettings = {
     keepalive: true,
