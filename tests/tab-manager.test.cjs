@@ -170,7 +170,7 @@ async function run() {
   const manifest = JSON.parse(
     fs.readFileSync(path.join(__dirname, "..", "manifest.json"), "utf8")
   );
-  assert.equal(manifest.version, "2.3.4");
+  assert.equal(manifest.version, "2.3.5");
   const ltiScript = manifest.content_scripts.find((entry) =>
     entry.js.includes("lti-autoclose.js")
   );

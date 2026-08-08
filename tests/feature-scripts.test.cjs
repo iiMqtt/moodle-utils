@@ -163,6 +163,7 @@ async function testKeepaliveToggle() {
 async function testLtiAutoClose() {
   const timers = [];
   const elements = new Map();
+  const messages = [];
   let closed = false;
   const window = {
     clearTimeout(timerId) {
@@ -184,7 +185,11 @@ async function testLtiAutoClose() {
     Boolean,
     chrome: {
       runtime: {
-        async sendMessage() {
+        async sendMessage(message) {
+          messages.push(message);
+          if (message.type === "CLOSE_LTI_LAUNCH_TAB") {
+            return { closed: true };
+          }
           return { ltiAutoClose: true };
         }
       }
@@ -227,8 +232,12 @@ async function testLtiAutoClose() {
   assert.equal(elements.has("moodle-utils-lti-conceal"), true);
   const closeTimer = timers.find((timer) => timer.delay === 1200);
   assert.ok(closeTimer);
-  closeTimer.callback();
-  assert.equal(closed, true);
+  await closeTimer.callback();
+  assert.equal(
+    messages.some((message) => message.type === "CLOSE_LTI_LAUNCH_TAB"),
+    true
+  );
+  assert.equal(closed, false);
 }
 
 async function run() {

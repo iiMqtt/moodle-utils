@@ -65,7 +65,17 @@
       if (revealFailsafe !== null) {
         window.clearTimeout(revealFailsafe);
       }
-      window.setTimeout(() => {
+      window.setTimeout(async () => {
+        try {
+          const result = await chrome.runtime.sendMessage({
+            type: "CLOSE_LTI_LAUNCH_TAB"
+          });
+          if (result?.closed) {
+            return;
+          }
+        } catch {
+          // Fall back to the original close behaviour below.
+        }
         window.close();
         window.setTimeout(revealPage, REVEAL_FAILSAFE_MS);
       }, CLOSE_DELAY_MS);

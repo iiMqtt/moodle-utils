@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Moodle Utils",
-  "version": "2.3.4",
+  "version": "2.3.5",
   "description": "Keeps UNSW Moodle alive, restores sessions, removes feedback nags, highlights changes, and organises tabs.",
   "permissions": [
     "alarms",

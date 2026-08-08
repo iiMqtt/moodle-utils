@@ -177,6 +177,35 @@ function isMoodleUrl(value) {
   }
 }
 
+function isLtiLaunchUrl(value) {
+  if (!isMoodleUrl(value)) {
+    return false;
+  }
+  const pathname = new URL(value).pathname;
+  return (
+    pathname === "/mod/lti/launch.php" || pathname === "/mod/lti/view.php"
+  );
+}
+
+async function closeLtiLaunchTab(tab, documentUrl = null) {
+  const settings = await getSettings();
+  const url = documentUrl || tab?.url;
+  if (
+    !settings.ltiAutoClose ||
+    !Number.isInteger(tab?.id) ||
+    !isLtiLaunchUrl(url)
+  ) {
+    return { closed: false };
+  }
+
+  try {
+    await chrome.tabs.remove(tab.id);
+    return { closed: true };
+  } catch {
+    return { closed: false };
+  }
+}
+
 function isLoginOrAuthUrl(value) {
   if (!isMoodleUrl(value)) {
     return false;
@@ -907,6 +936,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         break;
       case "GET_SETTINGS":
         sendResponse(await getSettings());
+        break;
+      case "CLOSE_LTI_LAUNCH_TAB":
+        sendResponse(await closeLtiLaunchTab(sender.tab, sender.url));
         break;
       case "COURSE_TAB_CONTEXT":
         sendResponse(await tabManager.onCourseContext(message, sender));

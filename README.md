@@ -25,7 +25,7 @@ if Chrome could not inject the updated scripts.
    `core_session_touch` heartbeat every four minutes using the proven standalone
    Session Keeper logic.
 2. **Close Mobius launch tabs** — conceals LTI launch pages before they paint,
-   then closes the redundant intermediate tab 1.2 seconds after Mobius opens.
+   then closes the redundant intermediate tab through Chrome after Mobius opens.
 3. **Restore expired sessions** — verifies the session with an authenticated
    `/my/` request every four minutes, starts one coordinated UNSW sign-in flow
    when needed, and returns affected tabs to their exact intended URLs.
