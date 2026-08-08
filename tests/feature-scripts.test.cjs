@@ -162,68 +162,30 @@ async function testKeepaliveToggle() {
 
 async function testLtiAutoClose() {
   const timers = [];
-  const elements = new Map();
-  const runtimeMessages = [];
   let closed = false;
   const window = {
-    clearTimeout(timerId) {
-      const timer = timers.find((entry) => entry.id === timerId);
-      if (timer) {
-        timer.cleared = true;
-      }
-    },
     close() {
       closed = true;
     },
     setTimeout(callback, delay) {
-      const id = timers.length + 1;
-      timers.push({ callback, delay, id, cleared: false });
-      return id;
+      timers.push({ callback, delay });
     }
   };
   const context = vm.createContext({
     Boolean,
     chrome: {
       runtime: {
-        async sendMessage(message) {
-          runtimeMessages.push(message);
-          if (message.type === "GET_SETTINGS") {
-            return { ltiAutoClose: true };
-          }
-          if (message.type === "CONCEAL_LTI_LAUNCH_TAB") {
-            return { concealed: true };
-          }
-          if (message.type === "CLOSE_CONCEALED_LTI_TAB") {
-            return { closed: true };
-          }
-          return null;
+        async sendMessage() {
+          return { ltiAutoClose: true };
         }
       }
     },
     console,
     document: {
       body: { innerText: "Your activity has opened in a new window" },
-      createElement() {
-        return {
-          id: "",
-          remove() {
-            elements.delete(this.id);
-          },
-          textContent: ""
-        };
-      },
-      documentElement: {
-        appendChild(element) {
-          elements.set(element.id, element);
-        }
-      },
-      getElementById(id) {
-        return elements.get(id) || null;
-      },
       querySelector() {
         return null;
-      },
-      readyState: "complete"
+      }
     },
     globalThis: {},
     location: {
@@ -235,25 +197,11 @@ async function testLtiAutoClose() {
     filename: "lti-autoclose.js"
   });
   await new Promise((resolve) => setImmediate(resolve));
-  await new Promise((resolve) => setImmediate(resolve));
 
-  assert.equal(elements.has("moodle-utils-lti-conceal"), true);
-  assert.equal(
-    runtimeMessages.some(
-      (message) => message.type === "CONCEAL_LTI_LAUNCH_TAB"
-    ),
-    true
-  );
-  const closeTimer = timers.find((timer) => timer.delay === 1200);
-  assert.ok(closeTimer);
-  await closeTimer.callback();
-  assert.equal(
-    runtimeMessages.some(
-      (message) => message.type === "CLOSE_CONCEALED_LTI_TAB"
-    ),
-    true
-  );
-  assert.equal(closed, false);
+  assert.equal(timers.length, 1);
+  assert.equal(timers[0].delay, 1200);
+  timers[0].callback();
+  assert.equal(closed, true);
 }
 
 async function run() {

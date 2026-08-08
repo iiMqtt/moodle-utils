@@ -52,7 +52,7 @@ function createHarness() {
     },
     runtime: {
       getManifest() {
-        return { version: "2.3.4" };
+        return { version: "2.3.3" };
       },
       onInstalled: eventStub(),
       onMessage: eventStub(),
@@ -290,39 +290,6 @@ async function run() {
     true
   );
   assert.deepEqual(removedTabs, [authTabId]);
-
-  tabRecords.set(42, {
-    id: 42,
-    windowId: 1,
-    groupId: -1,
-    openerTabId: 41,
-    active: true,
-    url: "https://moodle.telt.unsw.edu.au/mod/lti/launch.php?id=55"
-  });
-  const concealedLti = await context.concealLtiLaunchTab(tabRecords.get(42));
-  assert.equal(concealedLti.concealed, true);
-  assert.equal(
-    updatedTabs.some(
-      ({ tabId, changes }) => tabId === 41 && changes.active === true
-    ),
-    true
-  );
-  const closedLti = await context.closeConcealedLtiTab(tabRecords.get(42));
-  assert.equal(closedLti.closed, true);
-  assert.equal(tabRecords.has(42), false);
-
-  tabRecords.set(43, {
-    id: 43,
-    windowId: 1,
-    groupId: -1,
-    active: true,
-    url: "https://moodle.telt.unsw.edu.au/mod/lti/view.php?id=56"
-  });
-  const unsafeLti = await context.concealLtiLaunchTab(tabRecords.get(43));
-  assert.equal(unsafeLti.concealed, false);
-  const unsafeClose = await context.closeConcealedLtiTab(tabRecords.get(43));
-  assert.equal(unsafeClose.closed, false);
-  assert.equal(tabRecords.has(43), true);
 
   storage.moodleGuardianState = {
     ...storage.moodleGuardianState,

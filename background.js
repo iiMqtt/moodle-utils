@@ -31,7 +31,6 @@ const tabManager = globalThis.MoodleUtilsCreateTabManager(chrome);
 let authLaunchLock = false;
 let completionLock = false;
 let startSequence = Promise.resolve();
-const concealedLtiTabs = new Set();
 
 async function getSettings() {
   const stored = await chrome.storage.local.get(SETTINGS_KEY);
@@ -87,61 +86,6 @@ async function configureFeedbackPopupRule(settings = null) {
     removeRuleIds: [FEEDBACK_POPUP_RULE_ID],
     addRules
   });
-}
-
-function isLtiLaunchUrl(value) {
-  if (!isMoodleUrl(value)) {
-    return false;
-  }
-  const pathname = new URL(value).pathname;
-  return (
-    pathname === "/mod/lti/launch.php" || pathname === "/mod/lti/view.php"
-  );
-}
-
-async function concealLtiLaunchTab(tab, documentUrl = null) {
-  const settings = await getSettings();
-  if (
-    !settings.ltiAutoClose ||
-    !Number.isInteger(tab?.id) ||
-    !isLtiLaunchUrl(documentUrl || tab.url) ||
-    !Number.isInteger(tab.openerTabId)
-  ) {
-    return { concealed: false };
-  }
-
-  try {
-    const opener = await chrome.tabs.get(tab.openerTabId);
-    if (opener.windowId !== tab.windowId) {
-      return { concealed: false };
-    }
-    concealedLtiTabs.add(tab.id);
-    if (tab.active !== false) {
-      await chrome.tabs.update(opener.id, { active: true });
-    }
-    return { concealed: true };
-  } catch {
-    concealedLtiTabs.delete(tab.id);
-    return { concealed: false };
-  }
-}
-
-async function closeConcealedLtiTab(tab, documentUrl = null) {
-  if (
-    !Number.isInteger(tab?.id) ||
-    !concealedLtiTabs.has(tab.id) ||
-    !isLtiLaunchUrl(documentUrl || tab.url)
-  ) {
-    return { closed: false };
-  }
-
-  concealedLtiTabs.delete(tab.id);
-  try {
-    await chrome.tabs.remove(tab.id);
-    return { closed: true };
-  } catch {
-    return { closed: false };
-  }
 }
 
 async function broadcastSettings(settings) {
@@ -938,7 +882,6 @@ chrome.tabs.onCreated.addListener((tab) => {
 });
 
 chrome.tabs.onRemoved.addListener((tabId) => {
-  concealedLtiTabs.delete(tabId);
   tabManager.onTabRemoved(tabId);
   void forgetDestination(tabId);
   void finishTabRemoval(tabId);
@@ -964,12 +907,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         break;
       case "GET_SETTINGS":
         sendResponse(await getSettings());
-        break;
-      case "CONCEAL_LTI_LAUNCH_TAB":
-        sendResponse(await concealLtiLaunchTab(sender.tab, sender.url));
-        break;
-      case "CLOSE_CONCEALED_LTI_TAB":
-        sendResponse(await closeConcealedLtiTab(sender.tab, sender.url));
         break;
       case "COURSE_TAB_CONTEXT":
         sendResponse(await tabManager.onCourseContext(message, sender));
