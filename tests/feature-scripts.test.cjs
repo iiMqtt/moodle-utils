@@ -162,13 +162,22 @@ async function testKeepaliveToggle() {
 
 async function testLtiAutoClose() {
   const timers = [];
+  const elements = new Map();
   let closed = false;
   const window = {
+    clearTimeout(timerId) {
+      const timer = timers.find((entry) => entry.id === timerId);
+      if (timer) {
+        timer.cleared = true;
+      }
+    },
     close() {
       closed = true;
     },
     setTimeout(callback, delay) {
-      timers.push({ callback, delay });
+      const id = timers.length + 1;
+      timers.push({ callback, delay, id, cleared: false });
+      return id;
     }
   };
   const context = vm.createContext({
@@ -183,9 +192,26 @@ async function testLtiAutoClose() {
     console,
     document: {
       body: { innerText: "Your activity has opened in a new window" },
+      createElement() {
+        return {
+          id: "",
+          remove() {
+            elements.delete(this.id);
+          }
+        };
+      },
+      documentElement: {
+        appendChild(element) {
+          elements.set(element.id, element);
+        }
+      },
+      getElementById(id) {
+        return elements.get(id) || null;
+      },
       querySelector() {
         return null;
-      }
+      },
+      readyState: "complete"
     },
     globalThis: {},
     location: {
@@ -198,9 +224,10 @@ async function testLtiAutoClose() {
   });
   await new Promise((resolve) => setImmediate(resolve));
 
-  assert.equal(timers.length, 1);
-  assert.equal(timers[0].delay, 1200);
-  timers[0].callback();
+  assert.equal(elements.has("moodle-utils-lti-conceal"), true);
+  const closeTimer = timers.find((timer) => timer.delay === 1200);
+  assert.ok(closeTimer);
+  closeTimer.callback();
   assert.equal(closed, true);
 }
 
